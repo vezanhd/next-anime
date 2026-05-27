@@ -31,6 +31,28 @@ def is_sequel(input_title, candidate_title):
     overlap = len(input_words & candidate_words) / len(input_words)
     return overlap >= 0.5
 
+def remove_franchise_duplicates(df_result):
+    """Hanya ambil 1 anime per franchise"""
+    seen_franchises = set()
+    filtered_indices = []
+    
+    for idx, row in df_result.iterrows():
+        title = row['title'].lower()
+        title_words = set(w for w in title.split() if len(w) >= 3)
+        
+        is_duplicate = False
+        for franchise in seen_franchises:
+            overlap = len(title_words & franchise) / len(franchise) if len(franchise) > 0 else 0
+            if overlap >= 0.6:
+                is_duplicate = True
+                break
+        
+        if not is_duplicate:
+            seen_franchises.add(frozenset(title_words))
+            filtered_indices.append(idx)
+    
+    return df_result.loc[filtered_indices]
+
 def get_recommendations(title, n=10):
     title_lower = title.lower()
 
@@ -46,6 +68,7 @@ def get_recommendations(title, n=10):
     top_df['similarity'] = sim_scores[top_indices]
     top_df = top_df[top_df['mean'] > 0]
     top_df = top_df[~top_df['title'].apply(lambda x: is_sequel(title, x))]
+    top_df = remove_franchise_duplicates(top_df)
 
     max_rank = df[df['rank'] > 0]['rank'].max()
     top_df['rank_score'] = top_df['rank'].apply(lambda x: 1 - (x / max_rank) if x > 0 else 0)
