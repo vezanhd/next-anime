@@ -1,0 +1,278 @@
+// State
+let topPicksData = [];
+let hiddenGemsData = [];
+let topPicksShown = 10;
+let hiddenGemsShown = 10;
+
+// Elements
+const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
+const autocompleteList = document.getElementById('autocompleteList');
+const loading = document.getElementById('loading');
+const results = document.getElementById('results');
+const errorMsg = document.getElementById('errorMsg');
+const inputInfo = document.getElementById('inputInfo');
+const randomBtn = document.getElementById('randomBtn');
+const randomAgainBtn = document.getElementById('randomAgainBtn');
+const randomSection = document.getElementById('randomSection');
+
+// Autocomplete
+let autocompleteTimeout;
+searchInput.addEventListener('input', () => {
+    clearTimeout(autocompleteTimeout);
+    const query = searchInput.value.trim();
+    if (query.length < 2) {
+        autocompleteList.innerHTML = '';
+        return;
+    }
+    autocompleteTimeout = setTimeout(async () => {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        autocompleteList.innerHTML = '';
+        data.forEach(title => {
+            const item = document.createElement('div');
+            item.className = 'autocomplete-item';
+            item.textContent = title;
+            item.addEventListener('click', () => {
+                searchInput.value = title;
+                autocompleteList.innerHTML = '';
+                getRecommendations(title);
+            });
+            autocompleteList.appendChild(item);
+        });
+    }, 300);
+});
+
+// Close autocomplete on outside click
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-container')) {
+        autocompleteList.innerHTML = '';
+    }
+});
+
+// Search button
+searchBtn.addEventListener('click', () => {
+    const title = searchInput.value.trim();
+    if (title) getRecommendations(title);
+});
+
+// Enter key
+searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        const title = searchInput.value.trim();
+        if (title) {
+            autocompleteList.innerHTML = '';
+            getRecommendations(title);
+        }
+    }
+});
+
+// Random button
+randomBtn.addEventListener('click', showRandomAnime);
+randomAgainBtn.addEventListener('click', showRandomAnime);
+
+async function showRandomAnime() {
+    try {
+        const res = await fetch('/api/random');
+        const data = await res.json();
+        const grid = document.getElementById('randomGrid');
+        grid.innerHTML = '';
+        data.forEach(anime => {
+            const card = createAnimeCard(anime);
+            grid.appendChild(card);
+        });
+        randomSection.style.display = 'block';
+        lazyLoadPosters();
+        randomSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+// Get recommendations
+async function getRecommendations(title) {
+    results.style.display = 'none';
+    errorMsg.style.display = 'none';
+    inputInfo.style.display = 'none';
+    randomSection.style.display = 'none';
+    loading.style.display = 'block';
+    topPicksShown = 10;
+    hiddenGemsShown = 10;
+
+    loading.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    try {
+        const res = await fetch(`/api/recommend?title=${encodeURIComponent(title)}`);
+        const data = await res.json();
+
+        loading.style.display = 'none';
+
+        if (data.error) {
+            errorMsg.style.display = 'block';
+            document.getElementById('errorText').textContent = data.error;
+
+            // Cek apakah error karena tidak ditemukan → tampilkan hint judul Jepang
+            if (data.error.toLowerCase().includes('tidak ditemukan')) {
+                document.getElementById('errorHint').textContent =
+                    '💡 Try using the Japanese title. Example: "Shingeki no Kyojin" instead of "Attack on Titan", or "Kimetsu no Yaiba" instead of "Demon Slayer".';
+            } else {
+                document.getElementById('errorHint').textContent = '';
+            }
+            return;
+        }
+
+        showInputAnime(data.input_anime);
+        fetchPosterForInputAnime(data.input_anime.title);
+
+        topPicksData = data.top_picks;
+        hiddenGemsData = data.hidden_gems;
+
+        renderGrid('topPicksGrid', topPicksData, topPicksShown);
+        renderGrid('hiddenGemsGrid', hiddenGemsData, hiddenGemsShown);
+
+        lazyLoadPosters();
+
+        document.getElementById('topPicksMore').style.display =
+            topPicksData.length > 10 ? 'block' : 'none';
+        document.getElementById('hiddenGemsMore').style.display =
+            hiddenGemsData.length > 10 ? 'block' : 'none';
+
+        results.style.display = 'block';
+        results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    } catch (err) {
+        loading.style.display = 'none';
+        errorMsg.style.display = 'block';
+        document.getElementById('errorText').textContent = 'Something went wrong. Please try again.';
+        document.getElementById('errorHint').textContent = '';
+    }
+}
+
+// Fetch poster for input anime
+async function fetchPosterForInputAnime(title) {
+    try {
+        const res = await fetch(`/api/poster?title=${encodeURIComponent(title)}`);
+        const data = await res.json();
+        if (data.poster) {
+            const imgEl = document.getElementById('inputPoster');
+            if (imgEl) {
+                imgEl.src = data.poster;
+                imgEl.style.display = 'block';
+                imgEl.closest('.input-poster-wrapper').querySelector('.input-poster-placeholder').style.display = 'none';
+            }
+        }
+    } catch (e) {}
+}
+
+// Show input anime info
+function showInputAnime(anime) {
+    document.getElementById('inputTitle').textContent = anime.title;
+    document.getElementById('inputType').textContent = anime.media_type.toUpperCase();
+    document.getElementById('inputScore').textContent = `⭐ ${anime.mean}`;
+    document.getElementById('inputEpisodes').textContent =
+        anime.num_episodes > 0 ? `${anime.num_episodes} eps` : 'Ongoing';
+    document.getElementById('inputGenres').textContent = anime.genres;
+    document.getElementById('inputSynopsis').textContent =
+        anime.synopsis || 'No synopsis available.';
+    inputInfo.style.display = 'block';
+}
+
+// Lazy load all posters
+function lazyLoadPosters() {
+    const cards = document.querySelectorAll('.anime-card[data-title]');
+    cards.forEach((card, i) => {
+        if (card.getAttribute('data-loaded') === 'true') return;
+        setTimeout(() => {
+            const title = card.getAttribute('data-title');
+            fetch(`/api/poster?title=${encodeURIComponent(title)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.poster) {
+                        const img = card.querySelector('.anime-poster');
+                        const placeholder = card.querySelector('.anime-poster-placeholder');
+                        if (img) {
+                            img.src = data.poster;
+                            img.style.display = 'block';
+                            if (placeholder) placeholder.style.display = 'none';
+                            card.setAttribute('data-loaded', 'true');
+                        }
+                    }
+                })
+                .catch(() => {});
+        }, i * 120);
+    });
+}
+
+// Render grid
+function renderGrid(gridId, data, limit) {
+    const grid = document.getElementById(gridId);
+    grid.innerHTML = '';
+    const items = data.slice(0, limit);
+
+    if (items.length === 0) {
+        grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No results found.</p>';
+        return;
+    }
+
+    items.forEach(anime => {
+        const card = createAnimeCard(anime);
+        grid.appendChild(card);
+    });
+}
+
+// Create anime card
+function createAnimeCard(anime) {
+    const card = document.createElement('div');
+    card.className = 'anime-card';
+    card.setAttribute('data-title', anime.title);
+
+    const episodes = anime.num_episodes > 0 ? `${anime.num_episodes} eps` : 'Ongoing';
+    const score = anime.mean > 0 ? `⭐ ${anime.mean}` : 'N/A';
+    const synopsis = anime.synopsis || 'No synopsis available.';
+    const genres = anime.genres || 'Unknown';
+
+    card.innerHTML = `
+        <div class="anime-poster-wrapper">
+            <div class="anime-poster-placeholder">🎌</div>
+            <img class="anime-poster" src="" alt="${anime.title}" style="display:none;">
+        </div>
+        <div class="anime-card-body">
+            <div class="anime-card-header">
+                <div class="anime-card-title">${anime.title}</div>
+                <div class="anime-score">${score}</div>
+            </div>
+            <div class="anime-card-meta">
+                <span class="badge">${anime.media_type.toUpperCase()}</span>
+                <span class="badge">${episodes}</span>
+            </div>
+            <div class="anime-card-genres">${genres}</div>
+            <div class="anime-card-synopsis">${synopsis}</div>
+        </div>
+    `;
+
+    card.addEventListener('click', () => {
+        const query = encodeURIComponent(anime.title);
+        window.open(`https://myanimelist.net/anime.php?q=${query}&cat=anime`, '_blank');
+    });
+
+    return card;
+}
+
+// Show more
+function showMore(type) {
+    if (type === 'top') {
+        topPicksShown += 10;
+        renderGrid('topPicksGrid', topPicksData, topPicksShown);
+        lazyLoadPosters();
+        if (topPicksShown >= topPicksData.length) {
+            document.getElementById('topPicksMore').style.display = 'none';
+        }
+    } else {
+        hiddenGemsShown += 10;
+        renderGrid('hiddenGemsGrid', hiddenGemsData, hiddenGemsShown);
+        lazyLoadPosters();
+        if (hiddenGemsShown >= hiddenGemsData.length) {
+            document.getElementById('hiddenGemsMore').style.display = 'none';
+        }
+    }
+}

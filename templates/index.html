@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next Anime</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Next Anime Logo" class="nav-logo-img">
+            <span class="nav-title">Next<span class="accent">Anime</span></span>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Find Your <span class="accent">Next Anime</span></h1>
+            <p>Finished an anime and don't know what to watch next? Enter the title and we'll find the perfect match for you.</p>
+            <div class="search-container">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Enter anime title in Japanese... (e.g. Naruto, Bleach)" autocomplete="off">
+                    <button id="searchBtn">Search</button>
+                </div>
+                <div class="autocomplete-list" id="autocompleteList"></div>
+            </div>
+            <p class="search-hint">💡 Use Japanese title for best results (e.g. "Shingeki no Kyojin" instead of "Attack on Titan")</p>
+            <button class="random-btn" id="randomBtn">🎲 Surprise Me!</button>
+        </div>
+    </section>
+
+    <!-- RANDOM ANIME SECTION -->
+    <section class="random-section" id="randomSection" style="display:none;">
+        <div class="container">
+            <div class="section-header">
+                <h2>🎲 Random Picks For You</h2>
+                <p>Not sure what to watch? Try these!</p>
+            </div>
+            <div class="anime-grid" id="randomGrid"></div>
+            <div style="text-align:center; margin-top:24px;">
+                <button class="random-btn" id="randomAgainBtn">🎲 Shuffle Again</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- INPUT ANIME INFO -->
+    <section class="input-info" id="inputInfo" style="display:none;">
+        <div class="container">
+            <div class="input-anime-card">
+                <div class="input-anime-left">
+                    <div class="input-poster-wrapper">
+                        <div class="input-poster-placeholder">🎌</div>
+                        <img id="inputPoster" src="" alt="" style="display:none;">
+                    </div>
+                </div>
+                <div class="input-anime-right">
+                    <div class="input-anime-badge">You watched</div>
+                    <h2 id="inputTitle"></h2>
+                    <div class="input-anime-meta">
+                        <span id="inputType" class="badge"></span>
+                        <span id="inputScore" class="badge badge-score"></span>
+                        <span id="inputEpisodes" class="badge"></span>
+                    </div>
+                    <p id="inputGenres" class="genres-text"></p>
+                    <p id="inputSynopsis" class="synopsis-text"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LOADING -->
+    <div class="loading" id="loading" style="display:none;">
+        <div class="loading-spinner"></div>
+        <p>Finding your next anime...</p>
+    </div>
+
+    <!-- RESULTS -->
+    <section class="results" id="results" style="display:none;">
+        <div class="container">
+            <div class="section-header">
+                <h2>⭐ Top Picks</h2>
+                <p>Popular anime with similar vibes</p>
+            </div>
+            <div class="anime-grid" id="topPicksGrid"></div>
+            <div class="more-btn-container" id="topPicksMore" style="display:none;">
+                <button class="more-btn" onclick="showMore('top')">Show More</button>
+            </div>
+
+            <div class="section-header" style="margin-top: 60px;">
+                <h2>💎 Hidden Gems</h2>
+                <p>Underrated anime you might have missed</p>
+            </div>
+            <div class="anime-grid" id="hiddenGemsGrid"></div>
+            <div class="more-btn-container" id="hiddenGemsMore" style="display:none;">
+                <button class="more-btn" onclick="showMore('hidden')">Show More</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ERROR -->
+    <div class="error-msg" id="errorMsg" style="display:none;">
+        <div class="error-card">
+            <p>😔 <span id="errorText"></span></p>
+            <p class="error-hint" id="errorHint"></p>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <p>Built with ❤️ by <strong>Vezan Hidayatullah</strong> · Powered by MAL API + Content-Based Filtering</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
