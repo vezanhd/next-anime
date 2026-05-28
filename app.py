@@ -77,6 +77,10 @@ def get_recommendations(title, n=10):
     # Filter sequel — sama dengan notebook
     top_df = top_df[~top_df['title'].apply(lambda x: is_sequel(title, x))]
 
+    # Sort by similarity dulu sebelum filter duplikat
+    # Biar yang dipertahankan adalah yang paling mirip dengan input
+    top_df = top_df.sort_values(by=['similarity'], ascending=False)
+
     # Filter duplikat franchise — tambahan untuk web
     top_df = remove_franchise_duplicates(top_df)
 
