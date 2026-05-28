@@ -332,14 +332,17 @@ function removeFranchiseDuplicates(data) {
     });
 }
 
-// Filter data berdasarkan tipe yang dipilih
 function filterByType(data, selectedTypes) {
+    let filtered;
     if (selectedTypes.includes('all')) {
-        // Mode all → remove franchise duplicates
-        return removeFranchiseDuplicates(data);
+        filtered = data;
+    } else {
+        filtered = data.filter(anime => 
+            selectedTypes.includes(anime.media_type.toLowerCase())
+        );
     }
-    // Mode filter spesifik → tampilkan semua anime tipe yang dipilih (tanpa filter duplikat)
-    return data.filter(anime => selectedTypes.includes(anime.media_type.toLowerCase()));
+    // Selalu apply franchise dedup
+    return removeFranchiseDuplicates(filtered);
 }
 
 // Set filter

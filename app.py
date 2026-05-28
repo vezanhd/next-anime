@@ -94,7 +94,7 @@ def get_recommendations(title, n=10):
     # TOP PICKS — tanpa filter duplikat, kirim semua ke frontend
     top_picks = top_df[top_df['mean'] >= 7.5].sort_values(
         by=['combined_score', 'similarity'], ascending=[False, False]
-    ).head(n * 4)  # kirim lebih banyak untuk keperluan filter
+    ).head(n * 2)  # kirim lebih banyak untuk keperluan filter
 
     if len(top_picks) < n:
         extra = top_df[
@@ -111,7 +111,7 @@ def get_recommendations(title, n=10):
         (~top_df.index.isin(top_picks_indices))
     ].sort_values(
         by=['similarity', 'mean'], ascending=[False, False]
-    ).head(n * 4)  # kirim lebih banyak untuk keperluan filter
+    ).head(n * 2)  # kirim lebih banyak untuk keperluan filter
 
     return top_picks, hidden_gems, None
 
