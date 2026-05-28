@@ -622,3 +622,24 @@ body {
     border-color: var(--accent);
     color: white;
 }
+
+/* MORE LIKE THIS BUTTON */
+.more-like-btn {
+    margin-top: 12px;
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+}
+
+.more-like-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}

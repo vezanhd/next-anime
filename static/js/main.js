@@ -291,12 +291,25 @@ function createAnimeCard(anime) {
             </div>
             <div class="anime-card-genres">${genres}</div>
             <div class="anime-card-synopsis">${synopsis}</div>
+            <button class="more-like-btn" data-title="${anime.title}">🔍 More Like This</button>
         </div>
     `;
 
-    card.addEventListener('click', () => {
+    // Klik card → buka MAL
+    card.addEventListener('click', (e) => {
+        // Jangan trigger kalau yang diklik adalah tombol
+        if (e.target.closest('.more-like-btn')) return;
         const query = encodeURIComponent(anime.title);
         window.open(`https://myanimelist.net/anime.php?q=${query}&cat=anime`, '_blank');
+    });
+
+    // Klik tombol More Like This
+    card.querySelector('.more-like-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const title = anime.title;
+        searchInput.value = title;
+        getRecommendations(title);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
     return card;
