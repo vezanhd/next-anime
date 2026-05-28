@@ -12,11 +12,15 @@
 Next Anime adalah sistem rekomendasi anime berbasis web yang membantu pengguna menemukan anime serupa berdasarkan judul yang sudah mereka tonton. Sistem ini menggunakan **Content-Based Filtering** dengan **TF-IDF Vectorization** dan **Cosine Similarity** untuk menemukan anime dengan vibes yang mirip.
 
 ### ✨ Fitur
-- 🔍 **Smart Search** — pencarian dengan autocomplete dan dukungan judul Jepang (Original)
+- 🔍 **Smart Search** — pencarian dengan autocomplete dan dukungan judul asli anime
 - ⭐ **Top Picks** — anime populer dengan vibes serupa (popularity ≤ 2000)
 - 💎 **Hidden Gems** — anime underrated yang mungkin terlewatkan (popularity > 2000)
+- 🎯 **Filter Tipe Anime** — filter hasil rekomendasi berdasarkan tipe (TV, Movie, OVA, ONA, Special) dengan multi-select
+- 🔍 **More Like This** — klik tombol di setiap card untuk langsung cari rekomendasi serupa
 - 🎲 **Surprise Me!** — rekomendasi anime acak untuk yang belum tahu mau nonton apa
-- 🖼️ **Poster Anime** — poster lazy-loaded langsung dari MAL API
+- 🖼️ **Poster Anime** — lazy-loaded poster langsung dari MAL API
+- 🚫 **Filter Duplikat Franchise** — otomatis menyaring anime dari franchise yang sama
+- 🚫 **Filter Sequel/Prequel** — otomatis menyaring sekuel dan prekuel dari hasil rekomendasi
 - 📱 **Responsif** — tampilan optimal di desktop maupun mobile
 
 ---
@@ -41,13 +45,14 @@ Next Anime adalah sistem rekomendasi anime berbasis web yang membantu pengguna m
 3. **TF-IDF Vectorization** — Mengubah tags menjadi vektor numerik (matriks 25.240 × 10.000)
 4. **Cosine Similarity** — Mengukur kemiripan antar vektor anime
 5. **Dual Recommendation** — Membagi hasil menjadi Top Picks (populer) dan Hidden Gems (underrated)
+6. **Smart Filtering** — Filter otomatis untuk duplikat franchise dan sequel/prequel
 
 ### Strategi Pembobotan
 ```
-media_type × 5  →  bobot tertinggi (memastikan rekomendasi tipe yang sama)
-genres × 2      →  bobot tinggi (faktor kemiripan utama)
-synopsis        →  500 karakter pertama (menangkap tema cerita)
-studios         →  konteks tambahan
+media_type × 5  →  bobot tinggi (memastikan tipe yang relevan)
+genres × 4      →  bobot tinggi (faktor kemiripan utama)
+synopsis × 3    →  menangkap tema & vibes cerita
+studios × 1     →  konteks tambahan
 ```
 
 ---
@@ -58,9 +63,11 @@ Dievaluasi pada **50 sampel anime** dari berbagai genre:
 
 | Metrik | Skor |
 |---|---|
-| Genre Overlap | **68.00%** |
-| Media Type Consistency | **89.31%** |
-| Rata-rata Cosine Similarity | **0.2790** |
+| Genre Overlap | **53.89%** |
+| Media Type Consistency | **62.60%** |
+| Rata-rata Cosine Similarity | **0.1297** |
+
+> **Catatan:** Penurunan metrik kuantitatif dibanding model sebelumnya adalah hal yang disengaja — model baru lebih memprioritaskan kemiripan tema & cerita (synopsis) daripada kesamaan genre/tipe semata, yang menghasilkan rekomendasi yang lebih relevan secara subjektif.
 
 ---
 
@@ -126,8 +133,7 @@ next-anime/
 
 ## ⚠️ Keterbatasan
 
-- Anime dengan genre yang sangat niche (contoh: pure drama seperti Violet Evergarden) mungkin menghasilkan rekomendasi yang lebih sedikit
-- Judul anime harus dimasukkan dalam **bahasa Jepang** (contoh: "Shingeki no Kyojin" bukan "Attack on Titan")
+- Judul anime sebaiknya dimasukkan dalam **judul asli/Jepang** untuk hasil terbaik (contoh: "Shingeki no Kyojin" bukan "Attack on Titan")
 - Animasi China (Donghua) mungkin muncul di rekomendasi anime dengan genre umum seperti action, adventure, dan martial arts
 
 ---
