@@ -88,6 +88,14 @@
                 <h2>⭐ Top Picks</h2>
                 <p>Popular anime with similar vibes</p>
             </div>
+            <div class="filter-bar" id="topPicksFilter">
+                <button class="filter-btn active" data-type="all" onclick="setFilter('top', 'all', this)">All</button>
+                <button class="filter-btn" data-type="tv" onclick="setFilter('top', 'tv', this)">TV</button>
+                <button class="filter-btn" data-type="movie" onclick="setFilter('top', 'movie', this)">Movie</button>
+                <button class="filter-btn" data-type="ova" onclick="setFilter('top', 'ova', this)">OVA</button>
+                <button class="filter-btn" data-type="ona" onclick="setFilter('top', 'ona', this)">ONA</button>
+                <button class="filter-btn" data-type="special" onclick="setFilter('top', 'special', this)">Special</button>
+            </div>
             <div class="anime-grid" id="topPicksGrid"></div>
             <div class="more-btn-container" id="topPicksMore" style="display:none;">
                 <button class="more-btn" onclick="showMore('top')">Show More</button>
@@ -96,6 +104,14 @@
             <div class="section-header" style="margin-top: 60px;">
                 <h2>💎 Hidden Gems</h2>
                 <p>Underrated anime you might have missed</p>
+            </div>
+            <div class="filter-bar" id="hiddenGemsFilter">
+                <button class="filter-btn active" data-type="all" onclick="setFilter('hidden', 'all', this)">All</button>
+                <button class="filter-btn" data-type="tv" onclick="setFilter('hidden', 'tv', this)">TV</button>
+                <button class="filter-btn" data-type="movie" onclick="setFilter('hidden', 'movie', this)">Movie</button>
+                <button class="filter-btn" data-type="ova" onclick="setFilter('hidden', 'ova', this)">OVA</button>
+                <button class="filter-btn" data-type="ona" onclick="setFilter('hidden', 'ona', this)">ONA</button>
+                <button class="filter-btn" data-type="special" onclick="setFilter('hidden', 'special', this)">Special</button>
             </div>
             <div class="anime-grid" id="hiddenGemsGrid"></div>
             <div class="more-btn-container" id="hiddenGemsMore" style="display:none;">

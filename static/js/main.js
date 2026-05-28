@@ -130,6 +130,13 @@ async function getRecommendations(title) {
         fetchPosterForInputAnime(data.input_anime.title);
 
         topPicksData = data.top_picks;
+        // Reset filter ke all
+        topPicksFilter = ['all'];
+        hiddenGemsFilter = ['all'];
+        document.querySelectorAll('#topPicksFilter .filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#hiddenGemsFilter .filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('#topPicksFilter .filter-btn[data-type="all"]').classList.add('active');
+        document.querySelector('#hiddenGemsFilter .filter-btn[data-type="all"]').classList.add('active');
         hiddenGemsData = data.hidden_gems;
 
         renderGrid('topPicksGrid', topPicksData, topPicksShown);
@@ -261,6 +268,7 @@ function createAnimeCard(anime) {
     const card = document.createElement('div');
     card.className = 'anime-card';
     card.setAttribute('data-title', anime.title);
+    card.setAttribute('data-media-type', anime.media_type.toLowerCase());
 
     const episodes = anime.num_episodes > 0 ? `${anime.num_episodes} eps` : 'Ongoing';
     const score = anime.mean > 0 ? `⭐ ${anime.mean}` : 'N/A';
@@ -311,4 +319,65 @@ function showMore(type) {
             document.getElementById('hiddenGemsMore').style.display = 'none';
         }
     }
+}
+
+// Filter state
+let topPicksFilter = ['all'];
+let hiddenGemsFilter = ['all'];
+
+// Set filter — hanya hide/show card yang sudah ada, tidak ubah data
+function setFilter(section, type, btn) {
+    const filterId = section === 'top' ? 'topPicksFilter' : 'hiddenGemsFilter';
+    const gridId = section === 'top' ? 'topPicksGrid' : 'hiddenGemsGrid';
+
+    if (type === 'all') {
+        // Reset ke all
+        if (section === 'top') topPicksFilter = ['all'];
+        else hiddenGemsFilter = ['all'];
+        document.querySelectorAll(`#${filterId} .filter-btn`).forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    } else {
+        const filterState = section === 'top' ? topPicksFilter : hiddenGemsFilter;
+        const allBtn = document.querySelector(`#${filterId} .filter-btn[data-type="all"]`);
+
+        // Hapus 'all' dari filter
+        const allIdx = filterState.indexOf('all');
+        if (allIdx > -1) {
+            filterState.splice(allIdx, 1);
+            allBtn.classList.remove('active');
+        }
+
+        // Toggle tipe yang dipilih
+        const typeIdx = filterState.indexOf(type);
+        if (typeIdx > -1) {
+            filterState.splice(typeIdx, 1);
+            btn.classList.remove('active');
+        } else {
+            filterState.push(type);
+            btn.classList.add('active');
+        }
+
+        // Kalau tidak ada yang dipilih, balik ke all
+        if (filterState.length === 0) {
+            if (section === 'top') topPicksFilter = ['all'];
+            else hiddenGemsFilter = ['all'];
+            allBtn.classList.add('active');
+        }
+    }
+
+    // Apply filter — hide/show card
+    applyFilter(gridId, section === 'top' ? topPicksFilter : hiddenGemsFilter);
+}
+
+// Apply filter — hanya hide/show card, tidak ubah data sama sekali
+function applyFilter(gridId, selectedTypes) {
+    const cards = document.querySelectorAll(`#${gridId} .anime-card`);
+    cards.forEach(card => {
+        const mediaType = card.getAttribute('data-media-type');
+        if (selectedTypes.includes('all') || selectedTypes.includes(mediaType)) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
 }
