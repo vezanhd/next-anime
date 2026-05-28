@@ -91,28 +91,32 @@ async function showRandomAnime() {
 
 // Get recommendations
 async function getRecommendations(title) {
-    // Reset semua
+    results.style.display = 'none';
     errorMsg.style.display = 'none';
     inputInfo.style.display = 'none';
     randomSection.style.display = 'none';
-    loading.style.display = 'none'; // sembunyikan loading spinner
+    loading.style.display = 'block';
     topPicksShown = 10;
     hiddenGemsShown = 10;
 
-    // Langsung tampilkan skeleton
+    loading.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Tampilkan skeleton dulu
     results.style.display = 'block';
     renderSkeleton('topPicksGrid', 8);
     renderSkeleton('hiddenGemsGrid', 8);
-    results.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     try {
         const res = await fetch(`/api/recommend?title=${encodeURIComponent(title)}`);
         const data = await res.json();
 
+        loading.style.display = 'none';
+
         if (data.error) {
-            results.style.display = 'none';
             errorMsg.style.display = 'block';
             document.getElementById('errorText').textContent = data.error;
+
+            // Cek apakah error karena tidak ditemukan → tampilkan hint judul Jepang
             if (data.error.toLowerCase().includes('tidak ditemukan')) {
                 document.getElementById('errorHint').textContent =
                     '💡 Try using the Japanese title. Example: "Shingeki no Kyojin" instead of "Attack on Titan", or "Kimetsu no Yaiba" instead of "Demon Slayer".';
@@ -139,9 +143,10 @@ async function getRecommendations(title) {
             hiddenGemsData.length > 10 ? 'block' : 'none';
 
         results.style.display = 'block';
+        results.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     } catch (err) {
-        results.style.display = 'none';
+        loading.style.display = 'none';
         errorMsg.style.display = 'block';
         document.getElementById('errorText').textContent = 'Something went wrong. Please try again.';
         document.getElementById('errorHint').textContent = '';
