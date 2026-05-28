@@ -98,8 +98,8 @@ def get_recommendations(title, n=10):
 
     # TOP PICKS — sama dengan notebook, x2 untuk "more" button
     top_picks = top_df[top_df['mean'] >= 7.5].sort_values(
-        by=['combined_score', 'similarity'], ascending=[False, False]
-    ).head(n * 2)
+        by=['similarity', 'combined_score'], ascending=[False, False]
+    ).head(n * 3)
 
     # Fallback kalau top picks kurang dari n
     if len(top_picks) < n:
@@ -117,7 +117,7 @@ def get_recommendations(title, n=10):
         (~top_df.index.isin(top_picks_indices))
     ].sort_values(
         by=['similarity', 'mean'], ascending=[False, False]
-    ).head(n * 2)
+    ).head(n * 3)
 
     return top_picks, hidden_gems, None
 
