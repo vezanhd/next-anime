@@ -308,6 +308,7 @@ function showMore(type) {
         topPicksShown += 10;
         renderGrid('topPicksGrid', topPicksData, topPicksShown);
         lazyLoadPosters();
+        applyFilter('topPicksGrid', topPicksFilter); // tambah ini
         if (topPicksShown >= topPicksData.length) {
             document.getElementById('topPicksMore').style.display = 'none';
         }
@@ -315,6 +316,7 @@ function showMore(type) {
         hiddenGemsShown += 10;
         renderGrid('hiddenGemsGrid', hiddenGemsData, hiddenGemsShown);
         lazyLoadPosters();
+        applyFilter('hiddenGemsGrid', hiddenGemsFilter); // tambah ini
         if (hiddenGemsShown >= hiddenGemsData.length) {
             document.getElementById('hiddenGemsMore').style.display = 'none';
         }
