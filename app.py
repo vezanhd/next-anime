@@ -22,33 +22,40 @@ with open('data/indices.pkl', 'rb') as f:
 print("Model loaded! ✅")
 
 def is_sequel(input_title, candidate_title):
-    input_clean = input_title.lower().strip()
-    candidate_clean = candidate_title.lower().strip()
+    import re
+    # Bersihkan karakter spesial
+    input_clean = re.sub(r'[^a-z0-9\s]', '', input_title.lower()).strip()
+    candidate_clean = re.sub(r'[^a-z0-9\s]', '', candidate_title.lower()).strip()
+    
     input_words = set(w for w in input_clean.split() if len(w) >= 3)
     candidate_words = set(w for w in candidate_clean.split() if len(w) >= 3)
+    
     if len(input_words) == 0:
         return False
     overlap = len(input_words & candidate_words) / len(input_words)
     return overlap >= 0.5
 
 def remove_franchise_duplicates(df_result):
+    import re
     seen_franchises = set()
     filtered_indices = []
     
     for idx, row in df_result.iterrows():
-        title = row['title'].lower()
-        # Ambil hanya 2-3 kata pertama sebagai identitas franchise
-        title_words = set(w for w in title.split() if len(w) >= 3)
-        # Ambil kata pertama yang meaningful sebagai franchise key
-        words_list = [w for w in title.split() if len(w) >= 3]
-        franchise_key = ' '.join(words_list[:2]) if len(words_list) >= 2 else title
+        # Bersihkan karakter spesial dulu
+        title = re.sub(r'[^a-z0-9\s]', '', row['title'].lower()).strip()
+        title_words = [w for w in title.split() if len(w) >= 3]
+        title_words_set = set(title_words)
+        
+        # Ambil 2 kata pertama sebagai franchise key
+        franchise_key = ' '.join(title_words[:2]) if len(title_words) >= 2 else title
         
         is_duplicate = False
         for seen_key in seen_franchises:
-            # Cek overlap kata
             seen_words = set(seen_key.split())
-            overlap = len(title_words & seen_words) / max(len(seen_words), 1)
-            if overlap >= 0.5:  # turunkan dari 0.6 ke 0.5
+            if len(seen_words) == 0:
+                continue
+            overlap = len(title_words_set & seen_words) / max(len(seen_words), 1)
+            if overlap >= 0.5:
                 is_duplicate = True
                 break
         
