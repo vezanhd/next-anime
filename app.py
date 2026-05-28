@@ -75,33 +75,27 @@ def get_recommendations(title, n=10):
     sim_scores = cosine_similarity(tfidf_matrix[idx], tfidf_matrix).flatten()
     sim_scores[idx] = 0
 
-    # Sama dengan notebook: 100, tapi dinaikkan ke 200 untuk kompensasi filter franchise
-    top_indices = sim_scores.argsort()[::-1][:200]
+    top_indices = sim_scores.argsort()[::-1][:500]
     top_df = df.iloc[top_indices].copy()
     top_df['similarity'] = sim_scores[top_indices]
     top_df = top_df[top_df['mean'] > 0]
 
-    # Filter sequel — sama dengan notebook
+    # Filter sequel
     top_df = top_df[~top_df['title'].apply(lambda x: is_sequel(title, x))]
 
-    # Sort by similarity dulu sebelum filter duplikat
-    # Biar yang dipertahankan adalah yang paling mirip dengan input
+    # Sort by similarity
     top_df = top_df.sort_values(by=['similarity'], ascending=False)
 
-    # Filter duplikat franchise — tambahan untuk web
-    top_df = remove_franchise_duplicates(top_df)
-
-    # Combined score — sama dengan notebook
+    # Combined score
     max_rank = df[df['rank'] > 0]['rank'].max()
-    top_df['rank_score'] = 1 - (top_df['rank'] / max_rank)
+    top_df['rank_score'] = top_df['rank'].apply(lambda x: 1 - (x / max_rank) if x > 0 else 0)
     top_df['combined_score'] = (top_df['mean'] / 10 * 0.6) + (top_df['rank_score'] * 0.4)
 
-    # TOP PICKS — sama dengan notebook, x2 untuk "more" button
+    # TOP PICKS — tanpa filter duplikat, kirim semua ke frontend
     top_picks = top_df[top_df['mean'] >= 7.5].sort_values(
         by=['combined_score', 'similarity'], ascending=[False, False]
-    ).head(n * 2)
+    ).head(n * 4)  # kirim lebih banyak untuk keperluan filter
 
-    # Fallback kalau top picks kurang dari n
     if len(top_picks) < n:
         extra = top_df[
             (top_df['mean'] >= 7.0) &
@@ -109,7 +103,7 @@ def get_recommendations(title, n=10):
         ].sort_values(by=['combined_score'], ascending=False).head(n - len(top_picks))
         top_picks = pd.concat([top_picks, extra])
 
-    # HIDDEN GEMS — sama dengan notebook, x2 untuk "more" button
+    # HIDDEN GEMS
     top_picks_indices = set(top_picks.index)
     hidden_gems = top_df[
         (top_df['mean'] >= 7.0) &
@@ -117,7 +111,7 @@ def get_recommendations(title, n=10):
         (~top_df.index.isin(top_picks_indices))
     ].sort_values(
         by=['similarity', 'mean'], ascending=[False, False]
-    ).head(n * 2)
+    ).head(n * 4)  # kirim lebih banyak untuk keperluan filter
 
     return top_picks, hidden_gems, None
 
