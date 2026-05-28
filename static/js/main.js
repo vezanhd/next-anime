@@ -101,6 +101,11 @@ async function getRecommendations(title) {
 
     loading.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
+    // Tampilkan skeleton dulu
+    results.style.display = 'block';
+    renderSkeleton('topPicksGrid', 8);
+    renderSkeleton('hiddenGemsGrid', 8);
+
     try {
         const res = await fetch(`/api/recommend?title=${encodeURIComponent(title)}`);
         const data = await res.json();
@@ -201,6 +206,37 @@ function lazyLoadPosters() {
                 .catch(() => {});
         }, i * 120);
     });
+}
+
+// Buat skeleton card
+function createSkeletonCard() {
+    const card = document.createElement('div');
+    card.className = 'skeleton-card';
+    card.innerHTML = `
+        <div class="skeleton skeleton-poster"></div>
+        <div class="skeleton-body">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-title-short"></div>
+            <div>
+                <span class="skeleton skeleton-badge"></span>
+                <span class="skeleton skeleton-badge"></span>
+            </div>
+            <br>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text-short"></div>
+        </div>
+    `;
+    return card;
+}
+
+// Render skeleton dulu sebelum data siap
+function renderSkeleton(gridId, count = 8) {
+    const grid = document.getElementById(gridId);
+    grid.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+        grid.appendChild(createSkeletonCard());
+    }
 }
 
 // Render grid
