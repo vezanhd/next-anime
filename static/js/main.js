@@ -4,6 +4,10 @@ let hiddenGemsData = [];
 let topPicksShown = 10;
 let hiddenGemsShown = 10;
 
+// Filter state
+let topPicksFilter = ['all'];
+let hiddenGemsFilter = ['all'];
+
 // Elements
 const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
@@ -129,21 +133,34 @@ async function getRecommendations(title) {
         showInputAnime(data.input_anime);
         fetchPosterForInputAnime(data.input_anime.title);
 
+        // Setelah dapat data, render dengan filter
         topPicksData = data.top_picks;
         hiddenGemsData = data.hidden_gems;
 
-        renderGrid('topPicksGrid', topPicksData, topPicksShown);
-        renderGrid('hiddenGemsGrid', hiddenGemsData, hiddenGemsShown);
+        // Reset filter ke all
+        topPicksFilter = ['all'];
+        hiddenGemsFilter = ['all'];
+        document.querySelectorAll('#topPicksFilter .filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#hiddenGemsFilter .filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('#topPicksFilter .filter-btn[data-type="all"]').classList.add('active');
+        document.querySelector('#hiddenGemsFilter .filter-btn[data-type="all"]').classList.add('active');
+
+        // Render dengan filter franchise duplicates
+        const filteredTop = filterByType(topPicksData, topPicksFilter);
+        const filteredHidden = filterByType(hiddenGemsData, hiddenGemsFilter);
+
+        renderGrid('topPicksGrid', filteredTop, topPicksShown);
+        renderGrid('hiddenGemsGrid', filteredHidden, hiddenGemsShown);
 
         lazyLoadPosters();
 
-        document.getElementById('topPicksMore').style.display =
-            topPicksData.length > 10 ? 'block' : 'none';
-        document.getElementById('hiddenGemsMore').style.display =
-            hiddenGemsData.length > 10 ? 'block' : 'none';
-
         results.style.display = 'block';
         results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        document.getElementById('topPicksMore').style.display =
+            filteredTop.length > 10 ? 'block' : 'none';
+        document.getElementById('hiddenGemsMore').style.display =
+            filteredHidden.length > 10 ? 'block' : 'none';
 
     } catch (err) {
         loading.style.display = 'none';
@@ -294,20 +311,112 @@ function createAnimeCard(anime) {
     return card;
 }
 
+// Remove franchise duplicates di frontend
+function removeFranchiseDuplicates(data) {
+    const seen = new Set();
+    return data.filter(anime => {
+        const title = anime.title.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+        const words = title.split(' ').filter(w => w.length >= 3);
+        const key = words.slice(0, 2).join(' ') || title;
+        
+        for (const seenKey of seen) {
+            const seenWords = new Set(seenKey.split(' '));
+            const titleWords = new Set(words);
+            const overlap = [...titleWords].filter(w => seenWords.has(w)).length;
+            if (overlap / Math.max(seenWords.size, 1) >= 0.5) {
+                return false;
+            }
+        }
+        seen.add(key);
+        return true;
+    });
+}
+
+// Filter data berdasarkan tipe yang dipilih
+function filterByType(data, selectedTypes) {
+    if (selectedTypes.includes('all')) {
+        // Mode all → remove franchise duplicates
+        return removeFranchiseDuplicates(data);
+    }
+    // Mode filter spesifik → tampilkan semua anime tipe yang dipilih (tanpa filter duplikat)
+    return data.filter(anime => selectedTypes.includes(anime.media_type.toLowerCase()));
+}
+
+// Set filter
+function setFilter(section, type, btn) {
+    const filterState = section === 'top' ? topPicksFilter : hiddenGemsFilter;
+    const filterId = section === 'top' ? 'topPicksFilter' : 'hiddenGemsFilter';
+    const gridId = section === 'top' ? 'topPicksGrid' : 'hiddenGemsGrid';
+    const moreId = section === 'top' ? 'topPicksMore' : 'hiddenGemsMore';
+    const data = section === 'top' ? topPicksData : hiddenGemsData;
+
+    if (type === 'all') {
+        // Reset ke all
+        if (section === 'top') topPicksFilter = ['all'];
+        else hiddenGemsFilter = ['all'];
+
+        // Reset semua tombol
+        document.querySelectorAll(`#${filterId} .filter-btn`).forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    } else {
+        // Multi select
+        const allBtn = document.querySelector(`#${filterId} .filter-btn[data-type="all"]`);
+        
+        // Hapus 'all' dari filter
+        const idx = filterState.indexOf('all');
+        if (idx > -1) {
+            filterState.splice(idx, 1);
+            allBtn.classList.remove('active');
+        }
+
+        // Toggle tipe yang dipilih
+        const typeIdx = filterState.indexOf(type);
+        if (typeIdx > -1) {
+            filterState.splice(typeIdx, 1);
+            btn.classList.remove('active');
+        } else {
+            filterState.push(type);
+            btn.classList.add('active');
+        }
+
+        // Kalau tidak ada yang dipilih, balik ke all
+        if (filterState.length === 0) {
+            if (section === 'top') topPicksFilter = ['all'];
+            else hiddenGemsFilter = ['all'];
+            allBtn.classList.add('active');
+        }
+    }
+
+    // Reset shown count
+    if (section === 'top') topPicksShown = 10;
+    else hiddenGemsShown = 10;
+
+    // Re-render
+    const shown = section === 'top' ? topPicksShown : hiddenGemsShown;
+    const filtered = filterByType(data, section === 'top' ? topPicksFilter : hiddenGemsFilter);
+    renderGrid(gridId, filtered, shown);
+    lazyLoadPosters();
+
+    // Update more button
+    document.getElementById(moreId).style.display = filtered.length > shown ? 'block' : 'none';
+}
+
 // Show more
 function showMore(type) {
     if (type === 'top') {
         topPicksShown += 10;
-        renderGrid('topPicksGrid', topPicksData, topPicksShown);
+        const filtered = filterByType(topPicksData, topPicksFilter);
+        renderGrid('topPicksGrid', filtered, topPicksShown);
         lazyLoadPosters();
-        if (topPicksShown >= topPicksData.length) {
+        if (topPicksShown >= filtered.length) {
             document.getElementById('topPicksMore').style.display = 'none';
         }
     } else {
         hiddenGemsShown += 10;
-        renderGrid('hiddenGemsGrid', hiddenGemsData, hiddenGemsShown);
+        const filtered = filterByType(hiddenGemsData, hiddenGemsFilter);
+        renderGrid('hiddenGemsGrid', filtered, hiddenGemsShown);
         lazyLoadPosters();
-        if (hiddenGemsShown >= hiddenGemsData.length) {
+        if (hiddenGemsShown >= filtered.length) {
             document.getElementById('hiddenGemsMore').style.display = 'none';
         }
     }
