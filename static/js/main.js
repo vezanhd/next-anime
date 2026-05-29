@@ -263,6 +263,16 @@ function renderGrid(gridId, data, limit) {
     });
 }
 
+// Append card baru tanpa hapus yang sudah ada
+function appendGrid(gridId, data, from, to) {
+    const grid = document.getElementById(gridId);
+    const items = data.slice(from, to);
+    items.forEach(anime => {
+        const card = createAnimeCard(anime);
+        grid.appendChild(card);
+    });
+}
+
 // Create anime card
 function createAnimeCard(anime) {
     const card = document.createElement('div');
@@ -318,18 +328,20 @@ function createAnimeCard(anime) {
 // Show more
 function showMore(type) {
     if (type === 'top') {
+        const prevShown = topPicksShown;
         topPicksShown += 10;
-        renderGrid('topPicksGrid', topPicksData, topPicksShown);
+        appendGrid('topPicksGrid', topPicksData, prevShown, topPicksShown);
+        applyFilter('topPicksGrid', topPicksFilter);
         lazyLoadPosters();
-        applyFilter('topPicksGrid', topPicksFilter); // tambah ini
         if (topPicksShown >= topPicksData.length) {
             document.getElementById('topPicksMore').style.display = 'none';
         }
     } else {
+        const prevShown = hiddenGemsShown;
         hiddenGemsShown += 10;
-        renderGrid('hiddenGemsGrid', hiddenGemsData, hiddenGemsShown);
+        appendGrid('hiddenGemsGrid', hiddenGemsData, prevShown, hiddenGemsShown);
+        applyFilter('hiddenGemsGrid', hiddenGemsFilter);
         lazyLoadPosters();
-        applyFilter('hiddenGemsGrid', hiddenGemsFilter); // tambah ini
         if (hiddenGemsShown >= hiddenGemsData.length) {
             document.getElementById('hiddenGemsMore').style.display = 'none';
         }
