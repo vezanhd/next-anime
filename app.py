@@ -37,16 +37,19 @@ def is_sequel(input_title, candidate_title):
 
 def remove_franchise_duplicates(df_result):
     import re
+    
+    # Sort by similarity descending dulu di dalam fungsi
+    # Memastikan yang similarity tertinggi selalu diproses duluan
+    df_sorted = df_result.sort_values(by=['similarity'], ascending=False)
+    
     seen_franchises = set()
     filtered_indices = []
     
-    for idx, row in df_result.iterrows():
-        # Bersihkan karakter spesial dulu
+    for idx, row in df_sorted.iterrows():
         title = re.sub(r'[^a-z0-9\s]', '', row['title'].lower()).strip()
         title_words = [w for w in title.split() if len(w) >= 3]
         title_words_set = set(title_words)
         
-        # Ambil 2 kata pertama sebagai franchise key
         franchise_key = ' '.join(title_words[:2]) if len(title_words) >= 2 else title
         
         is_duplicate = False
@@ -63,7 +66,8 @@ def remove_franchise_duplicates(df_result):
             seen_franchises.add(franchise_key)
             filtered_indices.append(idx)
     
-    return df_result.loc[filtered_indices]
+    # Return dengan urutan similarity tertinggi dipertahankan
+    return df_sorted.loc[filtered_indices]
 
 def get_recommendations(title, n=10):
     title_lower = title.lower()
